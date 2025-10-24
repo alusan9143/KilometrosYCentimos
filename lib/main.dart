@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'pages/login_page.dart';
-import 'pages/home_page.dart';
-import 'pages/kilometros_page.dart';
-import 'pages/combustible_page.dart';
-import 'pages/mecanico_page.dart';
-import 'pages/car_detail_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -16,11 +17,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Gestor de Coches',
+      title: 'Kilometros y Centimos',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
-        useMaterial3: true,
+        primarySwatch: Colors.blue,
       ),
       home: const LoginPage(),
     );

@@ -1,40 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'home_page.dart';
 import 'main_wrapper.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final TextEditingController userCtrl = TextEditingController();
-    final TextEditingController passCtrl = TextEditingController();
+  State<LoginPage> createState() => _LoginPageState();
+}
 
+class _LoginPageState extends State<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _auth = FirebaseAuth.instance;
+  bool isLogin = true;
+
+  void _submit() async {
+    try {
+      if (isLogin) {
+        await _auth.signInWithEmailAndPassword(email: _emailController.text.trim(), password: _passwordController.text.trim(),);
+      } else {
+        await _auth.createUserWithEmailAndPassword(email: _emailController.text.trim(), password: _passwordController.text.trim(),);
+      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message ?? 'Error')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Login")),
+      appBar: AppBar(title: Text(isLogin ? 'Login' : 'Registro')),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
-              controller: userCtrl,
-              decoration: const InputDecoration(labelText: "Usuario"),
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
             ),
             TextField(
-              controller: passCtrl,
+              controller: _passwordController,
+              decoration: const InputDecoration(labelText: 'Contraseña'),
               obscureText: true,
-              decoration: const InputDecoration(labelText: "Contraseña"),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
+              onPressed: _submit,
+              child: Text(isLogin ? 'Entrar' : 'Registrarse'),
+            ),
+            TextButton(
               onPressed: () {
-                // Aquí podrías validar usuario/contraseña
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MainWrapper()),
-                );
+                setState(() => isLogin = !isLogin);
               },
-              child: const Text("Entrar"),
+              child: Text(isLogin
+              ? 'Crear cuenta'
+              : 'Ya tengo cuenta'),
             ),
           ],
         ),
