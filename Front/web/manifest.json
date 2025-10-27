@@ -1,6 +1,6 @@
 {
-    "name": "mi_app",
-    "short_name": "mi_app",
+    "name": "kilometrosycentimos",
+    "short_name": "kilometrosycentimos",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

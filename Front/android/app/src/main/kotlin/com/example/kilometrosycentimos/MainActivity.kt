@@ -1,4 +1,4 @@
-package com.example.mi_app
+package com.example.kilometrosycentimos
 
 import io.flutter.embedding.android.FlutterActivity
 

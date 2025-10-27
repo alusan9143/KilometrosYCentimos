@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'firebase_options.dart';
+import 'pages/login_page.dart';
+import 'pages/main_wrapper.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -10,76 +17,36 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // quita la etiqueta de "debug"
-      title: 'Mi Primera App Flutter',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
-        useMaterial3: true,
-      ),
-      home: const HomePage(),
+      title: 'Kilómetros y Céntimos',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const AuthGate(),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  int contador = 0;
-
-  void aumentar() {
-    setState(() {
-      contador++;
-    });
-  }
-
-  void reiniciar() {
-    setState(() {
-      contador = 0;
-    });
-  }
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Mi primera app Flutter 🚀"),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              "Has presionado el botón:",
-              style: TextStyle(fontSize: 20),
-            ),
-            Text(
-              "$contador",
-              style: const TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                color: Colors.blueAccent,
-              ),
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton.icon(
-              onPressed: reiniciar,
-              icon: const Icon(Icons.refresh),
-              label: const Text("Reiniciar"),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: aumentar,
-        tooltip: 'Aumentar',
-        child: const Icon(Icons.add),
-      ),
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // Esperando Firebase...
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // Usuario autenticado → mostrar app
+        if (snapshot.hasData) {
+          return const MainWrapper();
+        }
+
+        // No autenticado → mostrar login
+        return const LoginPage();
+      },
     );
   }
 }
