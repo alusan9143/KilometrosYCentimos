@@ -1,12 +1,9 @@
 name: kilometrosycentimos
-description: Aplicación para gestionar coches y gastos en Flutter
-
-publish_to: 'none' # Esto evita que se publique en pub.dev
-
-version: 1.0.0+1
+description: Una aplicación Flutter para gestionar tus coches, kilómetros y gastos.
+publish_to: 'none' # si no lo publicarás en pub.dev
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: '>=3.9.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -14,7 +11,13 @@ dependencies:
   firebase_core: ^4.2.0
   firebase_auth: ^6.1.1
   cloud_firestore: ^6.0.3
+  uuid: ^4.2.1
+  http: ^1.5.0
+  supabase_flutter: ^2.10.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+flutter:
+  uses-material-design: true

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
-import 'kilometros_page.dart';
-import 'combustible_page.dart';
-import 'mecanico_page.dart';
+import 'package:kilometrosycentimos/pages/home_page.dart';
+import 'package:kilometrosycentimos/pages/kilometers_page.dart';
+import 'package:kilometrosycentimos/pages/fuel_page.dart';
+import 'package:kilometrosycentimos/pages/mechanic_page.dart';
+import 'package:kilometrosycentimos/services/auth_service.dart';
+import 'package:kilometrosycentimos/pages/login_page.dart';
 
 class MainWrapper extends StatefulWidget {
   const MainWrapper({super.key});
@@ -12,51 +14,47 @@ class MainWrapper extends StatefulWidget {
 }
 
 class _MainWrapperState extends State<MainWrapper> {
-  int _selectedIndex = 0;
+  int _currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    HomePage(),
-    KilometersPage(),
-    FuelPage(),
-    MechanicPage(),
+  final List<Widget> _pages = [
+    const HomePage(),
+    const KilometersPage(carId: '1'), // Ejemplo
+    const FuelPage(carId: '1'),
+    const MechanicPage(carId: '1'),
   ];
-
-  void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white, // fondo blanco
-          boxShadow: [
-            BoxShadow(color: Colors.black26, blurRadius: 4),
-          ],
-        ),
-        child: NavigationBarTheme(
-          data: NavigationBarThemeData(
-            backgroundColor: Colors.transparent,
-            indicatorColor: Colors.blue.shade100, // 🔹 indicador del icono seleccionado
-            iconTheme: MaterialStateProperty.all(
-              const IconThemeData(color: Colors.blue, size: 28), // iconos siempre azules
-            ),
+      appBar: AppBar(
+        title: const Text('Kilómetros y Céntimos'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Cerrar sesión',
+            onPressed: () async {
+              await firebaseAuth.signOut();
+              if (context.mounted) {
+                // Redirige a login tras cerrar sesión
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+              }
+            },
           ),
-          child: NavigationBar(
-            height: 65,
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: _onItemTapped,
-            destinations: const [
-              NavigationDestination(icon: Icon(Icons.home), label: 'Inicio'),
-              NavigationDestination(icon: Icon(Icons.speed), label: 'Kms'),
-              NavigationDestination(icon: Icon(Icons.local_gas_station), label: 'Combustible'),
-              NavigationDestination(icon: Icon(Icons.build), label: 'Mecánico'),
-            ],
-          ),
-        ),
+        ],
+      ),
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
+          BottomNavigationBarItem(icon: Icon(Icons.speed), label: 'KM'),
+          BottomNavigationBarItem(icon: Icon(Icons.local_gas_station), label: 'Combustible'),
+          BottomNavigationBarItem(icon: Icon(Icons.build), label: 'Mecánico'),
+        ],
       ),
     );
   }
