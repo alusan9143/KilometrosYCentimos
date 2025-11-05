@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import '../services/car_service.dart';
+import 'package:kilometrosycentimos/services/car_service.dart';
 
 class MechanicPage extends StatefulWidget {
-  final String carId;
-  const MechanicPage({super.key, required this.carId});
+  const MechanicPage({super.key});
 
   @override
   State<MechanicPage> createState() => _MechanicPageState();
@@ -11,38 +10,74 @@ class MechanicPage extends StatefulWidget {
 
 class _MechanicPageState extends State<MechanicPage> {
   final CarService carService = CarService();
-  final _visitsController = TextEditingController();
+  String? selectedCarId;
+  List<Map<String, dynamic>> cars = [];
+  final TextEditingController visitsController = TextEditingController();
 
-  void _updateVisits() async {
-    final visits = int.tryParse(_visitsController.text);
-    if (visits == null) return;
-    await carService.updateVisits(widget.carId, visits);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Visitas actualizadas')),
-    );
-    _visitsController.clear();
+  @override
+  void initState() {
+    super.initState();
+    loadCars();
+  }
+
+  Future<void> loadCars() async {
+    final fetched = await carService.getCars();
+    setState(() {
+      cars = fetched;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Mecánico')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const Text('Selecciona un coche:', style: TextStyle(fontSize: 18)),
+          const SizedBox(height: 10),
+          DropdownButton<String>(
+            value: selectedCarId,
+            hint: const Text('Elige un coche'),
+            isExpanded: true,
+            items: cars.map((car) {
+              return DropdownMenuItem(
+                value: car['id'].toString(),
+                child: Text('${car['name']} (${car['model']})'),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                selectedCarId = value;
+                visitsController.text =
+                    cars.firstWhere((c) => c['id'].toString() == value)['visits'].toString();
+              });
+            },
+          ),
+          const SizedBox(height: 20),
+          if (selectedCarId != null) ...[
             TextField(
-              controller: _visitsController,
-              decoration: const InputDecoration(labelText: 'Visitas al taller'),
+              controller: visitsController,
               keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Visitas al mecánico',
+                border: OutlineInputBorder(),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: _updateVisits,
-              child: const Text('Actualizar'),
+              onPressed: () async {
+                final visits = int.tryParse(visitsController.text);
+                if (visits != null) {
+                  await carService.updateVisits(selectedCarId!, visits);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Visitas actualizadas')),
+                  );
+                }
+              },
+              child: const Text('Guardar cambios'),
             ),
           ],
-        ),
+        ],
       ),
     );
   }

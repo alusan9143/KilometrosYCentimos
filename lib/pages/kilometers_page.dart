@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import '../services/car_service.dart';
+import 'package:kilometrosycentimos/services/car_service.dart';
 
 class KilometersPage extends StatefulWidget {
-  final String carId;
-  const KilometersPage({super.key, required this.carId});
+  const KilometersPage({super.key});
 
   @override
   State<KilometersPage> createState() => _KilometersPageState();
@@ -11,38 +10,74 @@ class KilometersPage extends StatefulWidget {
 
 class _KilometersPageState extends State<KilometersPage> {
   final CarService carService = CarService();
-  final _kmController = TextEditingController();
+  String? selectedCarId;
+  List<Map<String, dynamic>> cars = [];
+  final TextEditingController kmController = TextEditingController();
 
-  void _updateKm() async {
-    final kms = int.tryParse(_kmController.text);
-    if (kms == null) return;
-    await carService.updateKilometers(widget.carId, kms);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Kilómetros actualizados')),
-    );
-    _kmController.clear();
+  @override
+  void initState() {
+    super.initState();
+    loadCars();
+  }
+
+  Future<void> loadCars() async {
+    final fetched = await carService.getCars();
+    setState(() {
+      cars = fetched;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Kilómetros')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const Text('Selecciona un coche:', style: TextStyle(fontSize: 18)),
+          const SizedBox(height: 10),
+          DropdownButton<String>(
+            value: selectedCarId,
+            hint: const Text('Elige un coche'),
+            isExpanded: true,
+            items: cars.map((car) {
+              return DropdownMenuItem(
+                value: car['id'].toString(),
+                child: Text('${car['name']} (${car['model']})'),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                selectedCarId = value;
+                kmController.text =
+                    cars.firstWhere((c) => c['id'].toString() == value)['kilometers'].toString();
+              });
+            },
+          ),
+          const SizedBox(height: 20),
+          if (selectedCarId != null) ...[
             TextField(
-              controller: _kmController,
-              decoration: const InputDecoration(labelText: 'Kilómetros actuales'),
+              controller: kmController,
               keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Kilómetros',
+                border: OutlineInputBorder(),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: _updateKm,
-              child: const Text('Actualizar'),
+              onPressed: () async {
+                final km = int.tryParse(kmController.text);
+                if (km != null) {
+                  await carService.updateKilometers(selectedCarId!, km);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Kilómetros actualizados')),
+                  );
+                }
+              },
+              child: const Text('Guardar cambios'),
             ),
           ],
-        ),
+        ],
       ),
     );
   }

@@ -18,9 +18,9 @@ class _MainWrapperState extends State<MainWrapper> {
 
   final List<Widget> _pages = [
     const HomePage(),
-    const KilometersPage(carId: '1'), // Ejemplo
-    const FuelPage(carId: '1'),
-    const MechanicPage(carId: '1'),
+    const KilometersPage(),
+    const FuelPage(),
+    const MechanicPage(),
   ];
 
   @override
@@ -35,7 +35,6 @@ class _MainWrapperState extends State<MainWrapper> {
             onPressed: () async {
               await firebaseAuth.signOut();
               if (context.mounted) {
-                // Redirige a login tras cerrar sesión
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const LoginPage()),
                   (route) => false,
@@ -47,6 +46,15 @@ class _MainWrapperState extends State<MainWrapper> {
       ),
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color.fromARGB(255, 14, 14, 110),
+        unselectedItemColor: const Color.fromARGB(128, 14, 14, 110),
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
+        selectedIconTheme: const IconThemeData(size: 32),
+        unselectedIconTheme: const IconThemeData(size: 24),
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal),
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         items: const [

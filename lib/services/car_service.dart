@@ -35,7 +35,12 @@ class CarService {
     }
   }
 
-  Future<void> createCar(String name, String model) async {
+  Future<void> createCar(String name, 
+                        String model, {
+                          int kilometers = 0,
+                          double fuel = 0.0,
+                          int visits = 0,
+                        }) async {
     final user = auth.currentUser;
     if (user == null) {
       throw Exception('Usuario no autenticado');
@@ -48,9 +53,9 @@ class CarService {
       final response = await supabase.from('cars').insert({
         'name': name,
         'model': model,
-        'kilometers': 0,
-        'fuel': 0,
-        'visits': 0,
+        'kilometers': kilometers,
+        'fuel': fuel,
+        'visits': visits,
         'user_id': user.uid,
         'created_at': DateTime.now().toIso8601String(),
       }).select();

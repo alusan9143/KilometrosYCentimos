@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import '../services/car_service.dart';
-import '../services/refuel_service.dart';
+import 'package:kilometrosycentimos/services/car_service.dart';
 
 class FuelPage extends StatefulWidget {
-  final String carId;
-  const FuelPage({super.key, required this.carId});
+  const FuelPage({super.key});
 
   @override
   State<FuelPage> createState() => _FuelPageState();
@@ -12,50 +10,74 @@ class FuelPage extends StatefulWidget {
 
 class _FuelPageState extends State<FuelPage> {
   final CarService carService = CarService();
-  final RefuelService refuelService = RefuelService();
-  final _litersController = TextEditingController();
-  final _priceController = TextEditingController();
+  String? selectedCarId;
+  List<Map<String, dynamic>> cars = [];
+  final TextEditingController fuelController = TextEditingController();
 
-  void _addRefuel() async {
-    final liters = double.tryParse(_litersController.text);
-    final price = double.tryParse(_priceController.text);
-    if (liters == null || price == null) return;
+  @override
+  void initState() {
+    super.initState();
+    loadCars();
+  }
 
-    await refuelService.addRefuel(widget.carId, liters, price, DateTime.now());
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Repostaje añadido')),
-      );
-      _litersController.clear();
-      _priceController.clear();
-    }
+  Future<void> loadCars() async {
+    final fetched = await carService.getCars();
+    setState(() {
+      cars = fetched;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Repostajes')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const Text('Selecciona un coche:', style: TextStyle(fontSize: 18)),
+          const SizedBox(height: 10),
+          DropdownButton<String>(
+            value: selectedCarId,
+            hint: const Text('Elige un coche'),
+            isExpanded: true,
+            items: cars.map((car) {
+              return DropdownMenuItem(
+                value: car['id'].toString(),
+                child: Text('${car['name']} (${car['model']})'),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                selectedCarId = value;
+                fuelController.text =
+                    cars.firstWhere((c) => c['id'].toString() == value)['fuel'].toString();
+              });
+            },
+          ),
+          const SizedBox(height: 20),
+          if (selectedCarId != null) ...[
             TextField(
-              controller: _litersController,
-              decoration: const InputDecoration(labelText: 'Litros'),
+              controller: fuelController,
               keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Combustible (L)',
+                border: OutlineInputBorder(),
+              ),
             ),
-            TextField(
-              controller: _priceController,
-              decoration: const InputDecoration(labelText: 'Precio'),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: _addRefuel,
-              child: const Text('Guardar'),
+              onPressed: () async {
+                final fuel = int.tryParse(fuelController.text);
+                if (fuel != null) {
+                  await carService.updateFuel(selectedCarId!, fuel);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Combustible actualizado')),
+                  );
+                }
+              },
+              child: const Text('Guardar cambios'),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
