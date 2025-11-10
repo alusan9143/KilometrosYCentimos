@@ -16,12 +16,35 @@ class MainWrapper extends StatefulWidget {
 class _MainWrapperState extends State<MainWrapper> {
   int _currentIndex = 0;
 
+  final AuthService _authService = AuthService();
+
   final List<Widget> _pages = [
     const HomePage(),
     const KilometersPage(),
     const FuelPage(),
     const MechanicPage(),
   ];
+
+  Future<void> _signOut() async {
+    try {
+      await _authService.signOut(); // ✅ Usar Supabase en lugar de Firebase
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error al cerrar sesión: $e');
+      // Aún así navegar al login
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+          (route) => false,
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,15 +55,7 @@ class _MainWrapperState extends State<MainWrapper> {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Cerrar sesión',
-            onPressed: () async {
-              await firebaseAuth.signOut();
-              if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginPage()),
-                  (route) => false,
-                );
-              }
-            },
+            onPressed: _signOut, // ✅ Usar la nueva función
           ),
         ],
       ),

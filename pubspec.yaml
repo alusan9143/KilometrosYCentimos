@@ -8,11 +8,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  firebase_core: ^4.2.0
-  firebase_auth: ^6.1.1
-  cloud_firestore: ^6.0.3
   uuid: ^4.2.1
   http: ^1.5.0
+  image_picker: ^1.1.2
   supabase_flutter: ^2.10.3
 
 dev_dependencies:

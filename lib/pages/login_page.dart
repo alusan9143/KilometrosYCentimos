@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:kilometrosycentimos/services/auth_service.dart'; 
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'main_wrapper.dart';
+
+final supabase = Supabase.instance.client;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,42 +18,44 @@ class _LoginPageState extends State<LoginPage> {
   String? error;
 
   Future<void> login() async {
-  setState(() {
-    loading = true;
-    error = null;
-  });
+    setState(() {
+      loading = true;
+      error = null;
+    });
 
-  try {
-    await firebaseAuth.signInWithEmailAndPassword(
-      email: emailController.text.trim(),
-      password: passwordController.text.trim(),
-    );
-    
-    // Navegar manualmente al MainWrapper
-    if (mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const MainWrapper()),
-        (route) => false,
+    try {
+      final response = await supabase.auth.signInWithPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
       );
-    }
-    
-  } catch (e) {
-    setState(() => error = e.toString());
-  } finally {
-    if (mounted) {
-      setState(() => loading = false);
+
+      if (response.user != null) {
+        debugPrint('✅ Sesión iniciada: ${response.user!.id}');
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const MainWrapper()),
+          );
+        }
+      } else {
+        setState(() => error = 'Credenciales incorrectas');
+      }
+    } on AuthException catch (e) {
+      setState(() => error = e.message);
+    } catch (e) {
+      setState(() => error = e.toString());
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
   }
-}
 
   Future<void> signup() async {
     try {
-      await firebaseAuth.createUserWithEmailAndPassword(
+      await supabase.auth.signUp(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cuenta creada. Inicia sesión.')),
+        const SnackBar(content: Text('Cuenta creada. Revisa tu correo.')),
       );
     } catch (e) {
       setState(() => error = e.toString());
